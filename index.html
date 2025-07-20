@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Much Water Should I Drink?</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+            line-height: 1.4;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1.2em;
+            transition: border-color 0.3s ease;
+            text-align: center;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            font-size: 1.3em;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 15px;
+            color: white;
+            font-size: 1.3em;
+            font-weight: 600;
+            line-height: 1.5;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        .error {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .powerade-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .info-box {
+            background: #f8f9ff;
+            border: 2px solid #e8eaff;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 0.95em;
+            color: #555;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .subtitle {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💧 How Much Water Should I Drink?</h1>
+            <p class="subtitle">Calculate your post-training hydration needs</p>
+        </div>
+
+        <div class="info-box">
+            <strong>How it works:</strong> For every pound you lose during training, you need to drink 2 cups (16 oz) of water to rehydrate properly.
+        </div>
+
+        <form id="hydrationForm">
+            <div class="input-group">
+                <label for="beforeWeight">Weight BEFORE Training (lbs)</label>
+                <input type="number" id="beforeWeight" step="0.1" min="50" max="500" required placeholder="e.g. 150.0">
+            </div>
+
+            <div class="input-group">
+                <label for="afterWeight">Weight AFTER Training (lbs)</label>
+                <input type="number" id="afterWeight" step="0.1" min="50" max="500" required placeholder="e.g. 148.5">
+            </div>
+
+            <button type="submit" class="calculate-btn">Calculate My Hydration 💪</button>
+        </form>
+
+        <div id="result" class="result">
+            <div class="powerade-icon">🥤</div>
+            <div id="resultText"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('hydrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const beforeWeight = parseFloat(document.getElementById('beforeWeight').value);
+            const afterWeight = parseFloat(document.getElementById('afterWeight').value);
+            const resultDiv = document.getElementById('result');
+            const resultText = document.getElementById('resultText');
+
+            // Clear previous result
+            resultDiv.classList.remove('show', 'error');
+            
+            // Validate inputs
+            if (!beforeWeight || !afterWeight) {
+                showResult('Please enter both weights!', true);
+                return;
+            }
+
+            if (beforeWeight <= 0 || afterWeight <= 0) {
+                showResult('Please enter valid weights!', true);
+                return;
+            }
+
+            // Check if weight increased
+            if (afterWeight > beforeWeight) {
+                showResult('❌ Not possible - you gained weight during training! Double-check your measurements.', true);
+                return;
+            }
+
+            // Calculate weight loss
+            const weightLoss = beforeWeight - afterWeight;
+            
+            if (weightLoss === 0) {
+                showResult('🎉 Great job! You maintained your weight perfectly. No extra hydration needed beyond normal water intake.', false);
+                return;
+            }
+
+            // Calculate fluid needed (1 lb = 2 cups = 16 oz)
+            const ouncesNeeded = weightLoss * 16;
+            
+            // Convert to Powerade bottles (32 oz each)
+            const poweradeBottles = ouncesNeeded / 32;
+            
+            let message = '';
+            
+            if (poweradeBottles < 0.25) {
+                // Less than 1/4 bottle
+                message = `Drink ${Math.round(ouncesNeeded)} oz of water<br>(Less than 1/4 of a Powerade bottle)`;
+            } else if (poweradeBottles < 0.5) {
+                // Less than 1/2 bottle
+                message = `Drink ${Math.round(ouncesNeeded)} oz of water<br>(About 1/4 of a Powerade bottle)`;
+            } else if (poweradeBottles < 0.75) {
+                // Less than 3/4 bottle
+                message = `Drink ${Math.round(ouncesNeeded)} oz of water<br>(About half a Powerade bottle)`;
+            } else if (poweradeBottles < 1) {
+                // Less than 1 bottle
+                message = `Drink ${Math.round(ouncesNeeded)} oz of water<br>(About 3/4 of a Powerade bottle)`;
+            } else if (poweradeBottles < 1.5) {
+                // 1 to 1.5 bottles
+                message = `Drink ${Math.round(ouncesNeeded)} oz of water<br>(About 1 full Powerade bottle)`;
+            } else if (poweradeBottles < 2) {
+                // 1.5 to 2 bottles
+                message = `Drink ${Math.round(ouncesNeeded)} oz of water<br>(About 1.5 Powerade bottles)`;
+            } else {
+                // 2 or more bottles
+                const bottles = Math.round(poweradeBottles * 2) / 2; // Round to nearest 0.5
+                message = `Drink ${Math.round(ouncesNeeded)} oz of water<br>(About ${bottles} Powerade bottles)`;
+            }
+
+            message += `<br><br>💡 You lost ${weightLoss.toFixed(1)} lbs during training`;
+            
+            showResult(message, false);
+        });
+
+        function showResult(message, isError) {
+            const resultDiv = document.getElementById('result');
+            const resultText = document.getElementById('resultText');
+            
+            resultText.innerHTML = message;
+            resultDiv.classList.add('show');
+            
+            if (isError) {
+                resultDiv.classList.add('error');
+            }
+            
+            // Scroll to result
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Clear result when input changes
+        document.getElementById('beforeWeight').addEventListener('input', clearResult);
+        document.getElementById('afterWeight').addEventListener('input', clearResult);
+
+        function clearResult() {
+            document.getElementById('result').classList.remove('show', 'error');
+        }
+    </script>
+</body>
+</html>
